@@ -2,8 +2,20 @@ import './style.css'
 import * as THREE from 'three'
 
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls'
-// import vertex from './shaders/vertex.glsl'
-// import fragment from './shaders/fragment.glsl'
+import vertex from './shaders/vertex.glsl'
+import fragment from './shaders/fragment.glsl'
+
+// random colors
+
+// import colors from 'nice-color-palettes'
+// let pallete = colors[Math.floor(Math.random() * colors.length)]
+// console.table(pallete)
+
+
+// custom colors
+let pallete = ['#c3e4ff', '#6ec3f4', '#eae2ff', '#b9beff']
+ 
+pallete = pallete.map((color) => new THREE.Color(color))
 
 
 export default class Sketch {
@@ -13,17 +25,16 @@ export default class Sketch {
     this.height = this.container.offsetHeight
     this.width = this.container.offsetWidth
     this.camera = new THREE.PerspectiveCamera(
-        75,
+        50,
         this.width / this.height,
-        0.1,
+        0.001,
         1000,
     )
-    this.camera.position.set(0,0,2)
+    this.camera.position.set(0,0.1,0.1)
     this.scene = new THREE.Scene()
-    // this.scene.destination = {x:0, y:0}
     this.renderer = new THREE.WebGLRenderer({antialias: true, alpha: true})
     this.renderer.setPixelRatio(window.devicePixelRatio)
-    this.renderer.setClearColor('black', 1)
+    // this.renderer.setClearColor('green', 1)
     this.container.appendChild(this.renderer.domElement)
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
     this.resize()
@@ -36,21 +47,20 @@ export default class Sketch {
 
   addObjects() {
  
-  //  this.material = new THREE.ShaderMaterial({
-  //     side: THREE.DoubleSide,
-  //     // transparent:true,
-  //     // wireframe: true,
-  //     uniforms: {
-  //       uTime: {type: 'f', value: 0},
-  //       uResolution: {type: 't', value: new THREE.Vector4()},
-  //       progress: {type: 'f', value: 0}
-  //     },
-  //     vertexShader: vertex,
-  //     fragmentShader: fragment
-  //   })
-  this.geometry = new THREE.PlaneBufferGeometry(1,1,1)
-  this.material = new THREE.MeshBasicMaterial({color: 0xFFFFFF, side: THREE.DoubleSide});
+   this.material = new THREE.ShaderMaterial({
+      side: THREE.DoubleSide,
+      // transparent:true,
+      // wireframe: true,
+      uniforms: {
+        time: {type: 'f', value: 0},
+        uColor: { value: pallete },
+      },
+      vertexShader: vertex,
+      fragmentShader: fragment
+    })
 
+  this.geometry = new THREE.PlaneGeometry(1, 1, 300, 300)
+ 
   this.mesh = new THREE.Mesh(this.geometry, this.material)
     
   this.scene.add(this.mesh)
@@ -61,7 +71,7 @@ export default class Sketch {
   render() {
      this.controls.update()
      this.camera.lookAt(this.scene.position);
-
+     this.material.uniforms.time.value = this.clock.getElapsedTime() * 0.01
     requestAnimationFrame(this.render.bind(this))
     this.renderer.render(this.scene, this.camera)
   }
@@ -84,3 +94,28 @@ export default class Sketch {
 new Sketch({
   domElement: document.getElementById('container'),
 })
+
+
+function toggleFullScreen() {
+  if ((document.fullScreenElement && document.fullScreenElement !== null) || 
+  (!document.mozFullScreen && !document.webkitIsFullScreen)) { 
+      if (document.documentElement.requestFullScreen) {
+          document.documentElement.requestFullScreen();
+      } else if (document.documentElement.mozRequestFullScreen) {
+          document.documentElement.mozRequestFullScreen();
+      } else if (document.documentElement.webkitRequestFullScreen) {
+          document.documentElement.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
+      }
+  } else {
+      if (document.cancelFullScreen) {
+          document.cancelFullScreen();
+      } else if (document.mozCancelFullScreen) {
+          document.mozCancelFullScreen();
+      } else if (document.webkitCancelFullScreen) {
+          document.webkitCancelFullScreen();
+      }
+  }
+}
+window.onclick = () => {
+toggleFullScreen()
+}
